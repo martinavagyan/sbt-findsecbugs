@@ -14,7 +14,14 @@ object FindSecBugs extends AutoPlugin {
     "com.h3xstream.findsecbugs" % "findsecbugs-plugin" % "1.4.5" % "findsecbugs->default"
   )
 
-  lazy val findSecBugs = taskKey[Unit]("Perform FindSecurityBugs check")
+  override def trigger = AllRequirements
+
+  object autoImport {
+    lazy val findSecBugs = taskKey[Unit]("Perform FindSecurityBugs check")
+  }
+
+  import autoImport._
+
   override lazy val projectSettings = Seq(
     findSecBugs := {
       def commandLineClasspath(classpathFiles: Seq[File]): String = PathFinder(classpathFiles).absString
