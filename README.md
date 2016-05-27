@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/code-star/sbt-findsecbugs.png)](https://circleci.com/gh/code-star/sbt-findsecbugs)
+
 # sbt-findsecbugs
 An SBT plugin for FindSecurityBugs
 
