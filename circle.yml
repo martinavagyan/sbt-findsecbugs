@@ -1,0 +1,14 @@
+machine:
+  java:
+    version: openjdk8
+dependencies:
+  cache_directories:
+    - "~/.sbt"
+  override:
+    - sbt clean test:compile
+test:
+  override:
+    - sbt scripted
+  post:
+    - mkdir -p $CIRCLE_TEST_REPORTS/junit/
+    - cp ./target/test-reports/* $CIRCLE_TEST_REPORTS/junit/
