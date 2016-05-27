@@ -1,0 +1,4 @@
+# Test is an output report is created
+> findSecBugs
+$ exists global/boot/scala-2.10.6/lib/scala-library.jar
+$ exists target/scala-2.10/findsecbugs/report.html
