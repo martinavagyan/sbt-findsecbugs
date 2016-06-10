@@ -27,7 +27,7 @@ object FindSecBugs extends AutoPlugin {
       lazy val output = crossTarget.value / "findsecbugs" / "report.html"
       lazy val findbugsClasspath = Classpaths managedJars (findsecbugsConfig, classpathTypes.value, update.value)
       lazy val classpath = commandLineClasspath((dependencyClasspath in Compile).value.files)
-      lazy val auxClasspath = (baseDirectory.value / "src").absString
+      lazy val auxClasspath = commandLineClasspath((dependencyClasspath in Compile).value.files ++ (findbugsClasspath.files filter (_.getName startsWith "jsr305")))
       lazy val pluginList = s"${Path.userHome.absolutePath}/.ivy2/cache/com.h3xstream.findsecbugs/findsecbugs-plugin/jars/findsecbugs-plugin-1.4.5.jar"
 
       IO.createDirectory(output.getParentFile)
