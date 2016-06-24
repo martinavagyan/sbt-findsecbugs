@@ -33,13 +33,15 @@ object FindSecBugs extends AutoPlugin {
       IO.createDirectory(output.getParentFile)
       IO.withTemporaryDirectory { tempdir =>
         val includeFile: sbt.File = createIncludesFile(tempdir)
+        val classDir = (classDirectory in Compile).value.getAbsolutePath
 
+        Keys.streams.value.log.info(s"Performing FindSecurityBugs check of '$classDir'...")
         Fork.java(
           ForkOptions(javaHome = javaHome.value, outputStrategy = Some(new LoggedOutput(streams.value.log))),
           List("-Xmx1024m", "-cp", classpath, "edu.umd.cs.findbugs.LaunchAppropriateUI",
             "-textui", "-html:plain.xsl", "-output", output.getAbsolutePath, "-nested:true", "-auxclasspath", auxClasspath,
             "-low", "-effort:max", "-pluginList", pluginList, "-include", includeFile.getAbsolutePath,
-            (classDirectory in Compile).value.getAbsolutePath))
+            classDir))
       }
 
       def createIncludesFile(tempdir: sbt.File): sbt.File = {
