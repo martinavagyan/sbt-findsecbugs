@@ -34,6 +34,7 @@ object FindSecBugs extends AutoPlugin {
       IO.withTemporaryDirectory { tempdir =>
         val includeFile: sbt.File = createIncludesFile(tempdir)
 
+        Keys.streams.value.log.info("Performing FindSecurityBugs check...")
         Fork.java(
           ForkOptions(javaHome = javaHome.value, outputStrategy = Some(new LoggedOutput(streams.value.log))),
           List("-Xmx1024m", "-cp", classpath, "edu.umd.cs.findbugs.LaunchAppropriateUI",
