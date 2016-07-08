@@ -2,7 +2,8 @@ sbtPlugin := true
 
 name := "sbt-findsecbugs"
 organization := "nl.codestar"
-version := "0.1-SNAPSHOT"
+version := "0.1"
+description := "The Findbugs security plugin wrapped in a sbt plugin"
 
 scalaVersion := "2.10.6"
 scalacOptions ++= Seq("-encoding", "UTF8", "-Xfatal-warnings",
@@ -17,3 +18,12 @@ libraryDependencies += "com.h3xstream.findsecbugs" % "findsecbugs-plugin" % "1.4
 // Scripted - sbt plugin tests
 scriptedSettings
 scriptedLaunchOpts <+= version apply { v => "-Dproject.version="+v }
+
+import bintray.Keys._
+
+bintrayPublishSettings
+
+licenses += ("MIT", url("https://opensource.org/licenses/MIT"))
+publishMavenStyle := false
+repository in bintray := "sbt-plugins"
+bintrayOrganization in bintray := None
