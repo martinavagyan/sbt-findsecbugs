@@ -6,6 +6,8 @@ import sbt._
 import Keys._
 
 object FindSecBugs extends AutoPlugin {
+  private val findsecbugsPluginVersion = "1.4.5"
+
   val findsecbugsConfig = sbt.config("findsecbugs")
 
   override def trigger = AllRequirements
@@ -21,14 +23,15 @@ object FindSecBugs extends AutoPlugin {
     libraryDependencies ++= Seq(
       "com.google.code.findbugs" % "findbugs" % "3.0.1",
       "com.google.code.findbugs" % "jsr305" % "3.0.1",
-      "com.h3xstream.findsecbugs" % "findsecbugs-plugin" % "1.4.5"),
+      "com.h3xstream.findsecbugs" % "findsecbugs-plugin" % findsecbugsPluginVersion),
     findSecBugs := {
       def commandLineClasspath(classpathFiles: Seq[File]): String = PathFinder(classpathFiles).absString
       lazy val output = crossTarget.value / "findsecbugs" / "report.html"
       lazy val findbugsClasspath = Classpaths managedJars (findsecbugsConfig, classpathTypes.value, update.value)
       lazy val classpath = commandLineClasspath((dependencyClasspath in Compile).value.files)
       lazy val auxClasspath = commandLineClasspath((dependencyClasspath in Compile).value.files ++ (findbugsClasspath.files filter (_.getName startsWith "jsr305")))
-      lazy val pluginList = s"${Path.userHome.absolutePath}/.ivy2/cache/com.h3xstream.findsecbugs/findsecbugs-plugin/jars/findsecbugs-plugin-1.4.5.jar"
+      lazy val ivyHome = ivyPaths(_.ivyHome).value.getOrElse(Path.userHome / ".ivy2")
+      lazy val pluginList = s"${ivyHome.absolutePath}/cache/com.h3xstream.findsecbugs/findsecbugs-plugin/jars/findsecbugs-plugin-$findsecbugsPluginVersion.jar"
 
       IO.createDirectory(output.getParentFile)
       IO.withTemporaryDirectory { tempdir =>
