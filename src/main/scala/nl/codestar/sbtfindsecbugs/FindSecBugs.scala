@@ -39,26 +39,29 @@ object FindSecBugs extends AutoPlugin {
         val classDir = (classDirectory in Compile).value.getAbsolutePath
 
         Keys.streams.value.log.info(s"Performing FindSecurityBugs check of '$classDir'...")
-        Fork.java(
+        val result = Fork.java(
           ForkOptions(javaHome = javaHome.value, outputStrategy = Some(new LoggedOutput(streams.value.log))),
-          List("-Xmx1024m", "-cp", classpath, "edu.umd.cs.findbugs.LaunchAppropriateUI",
-            "-textui", "-html:plain.xsl", "-output", output.getAbsolutePath, "-nested:true", "-auxclasspath", auxClasspath,
-            "-low", "-effort:max", "-pluginList", pluginList, "-include", includeFile.getAbsolutePath,
-            classDir))
-      }
+          List("-Xmx1024m", "-cp", classpath, "edu.umd.cs.findbugs.LaunchAppropriateUI", "-textui",
+            "-exitcode", "-html:plain.xsl", "-output", output.getAbsolutePath, "-nested:true",
+            "-auxclasspath", auxClasspath, "-low", "-effort:max", "-pluginList", pluginList,
+            "-include", includeFile.getAbsolutePath, classDir))
 
-      def createIncludesFile(tempdir: sbt.File): sbt.File = {
-        val includeFile = tempdir / "include.xml"
-        val includeXml =
-          """
-            |<FindBugsFilter>
-            |    <Match>
-            |        <Bug category="SECURITY"/>
-            |    </Match>
-            |</FindBugsFilter>
-          """.stripMargin
-        IO.write(includeFile, includeXml)
-        includeFile
+        if (result != 0) sys.error(s"Security issues found. Please review them in ${output}")
       }
-    })
+    }
+  )
+
+  private def createIncludesFile(tempdir: sbt.File): sbt.File = {
+    val includeFile = tempdir / "include.xml"
+    val includeXml =
+      """
+        |<FindBugsFilter>
+        |    <Match>
+        |        <Bug category="SECURITY"/>
+        |    </Match>
+        |</FindBugsFilter>
+      """.stripMargin
+    IO.write(includeFile, includeXml)
+    includeFile
+  }
 }
