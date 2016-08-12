@@ -2,7 +2,7 @@ sbtPlugin := true
 
 name := "sbt-findsecbugs"
 organization := "nl.codestar"
-version := "0.2-SNAPSHOT"
+version := "0.3-SNAPSHOT"
 description := "The Findbugs security plugin wrapped in a sbt plugin"
 
 scalaVersion := "2.10.6"
@@ -13,7 +13,7 @@ scalacOptions ++= Seq("-encoding", "UTF8", "-Xfatal-warnings",
 
 libraryDependencies += "com.google.code.findbugs" % "findbugs" % "3.0.1"
 libraryDependencies += "com.google.code.findbugs" % "jsr305" % "3.0.1"
-libraryDependencies += "com.h3xstream.findsecbugs" % "findsecbugs-plugin" % "1.4.5"
+libraryDependencies += "com.h3xstream.findsecbugs" % "findsecbugs-plugin" % "1.4.6"
 
 // Scripted - sbt plugin tests
 scriptedSettings
