@@ -36,18 +36,27 @@ object FindSecBugs extends AutoPlugin {
       IO.createDirectory(output.getParentFile)
       IO.withTemporaryDirectory { tempdir =>
         val includeFile: sbt.File = createIncludesFile(tempdir)
-        val classDir = (classDirectory in Compile).value.getAbsolutePath
+        val classDir = (classDirectory in Compile).value
 
-        Keys.streams.value.log.info(s"Performing FindSecurityBugs check of '$classDir'...")
-        val result = Fork.java(
-          ForkOptions(javaHome = javaHome.value, outputStrategy = Some(new LoggedOutput(streams.value.log))),
-          List("-Xmx1024m", "-cp", classpath, "edu.umd.cs.findbugs.LaunchAppropriateUI", "-textui",
-            "-exitcode", "-html:plain.xsl", "-output", output.getAbsolutePath, "-nested:true",
-            "-auxclasspath", auxClasspath, "-low", "-effort:max", "-pluginList", pluginList,
-            "-include", includeFile.getAbsolutePath, classDir))
+        if(classDir.exists) {
+          if(classDir.list().isEmpty) {
+            sys.error("The directory is empty, not running scan")
+          }
+          Keys.streams.value.log.info(s"Performing FindSecurityBugs check of '$classDir'...")
+          val result = Fork.java(
+            ForkOptions(javaHome = javaHome.value, outputStrategy = Some(LoggedOutput(streams.value.log))),
+            List("-Xmx1024m", "-cp", classpath, "edu.umd.cs.findbugs.LaunchAppropriateUI", "-textui",
+              "-exitcode", "-html:plain.xsl", "-output", output.getAbsolutePath, "-nested:true",
+              "-auxclasspath", auxClasspath, "-low", "-effort:max", "-pluginList", pluginList,
+              "-include", includeFile.getAbsolutePath, classDir.getAbsolutePath))
 
-        if (result != 0) sys.error(s"Security issues found. Please review them in ${output}")
+          if (result != 0) sys.error(s"Security issues found. Please review them in ${output}")
+        }
+        else {
+          sys.error("The directory does not exist, not running scan")
+        }
       }
+
     }
   )
 
