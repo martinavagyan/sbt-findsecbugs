@@ -39,19 +39,20 @@ object FindSecBugs extends AutoPlugin {
         val includeFile: sbt.File = createIncludesFile(tempdir)
         val classDir = (classDirectory in Compile).value
 
-        if(classDir.exists && !classDir.list().isEmpty) {
+        if (classDir.exists && !classDir.list().isEmpty) {
           log.info(s"Performing FindSecurityBugs check of '$classDir'...")
+          val findBugsLogger = new FindBugsLogger(log)
           val result = Fork.java(
-            ForkOptions(javaHome = javaHome.value, outputStrategy = Some(LoggedOutput(streams.value.log))),
+            ForkOptions(javaHome = javaHome.value, outputStrategy = Some(LoggedOutput(findBugsLogger))),
             List("-Xmx1024m", "-cp", classpath, "edu.umd.cs.findbugs.LaunchAppropriateUI", "-textui",
               "-exitcode", "-html:plain.xsl", "-output", output.getAbsolutePath, "-nested:true",
               "-auxclasspath", auxClasspath, "-low", "-effort:max", "-pluginList", pluginList,
               "-include", includeFile.getAbsolutePath, classDir.getAbsolutePath))
 
-          if (result != 0) sys.error(s"Security issues found. Please review them in ${output}")
+          if (result != 0) sys.error(s"Security issues found. Please review them in $output")
         }
         else {
-          log.warn(s"The directory ${classDir} does not exist or is empty, not running scan")
+          log.warn(s"The directory $classDir does not exist or is empty, not running scan")
         }
       }
 
@@ -71,4 +72,24 @@ object FindSecBugs extends AutoPlugin {
     IO.write(includeFile, includeXml)
     includeFile
   }
+
+  /**
+    * FindBugs logs everyting to stderr, even when everything was succesful.
+    * This logger makes that logging a little bit smarter.
+    */
+  class FindBugsLogger(underlying: Logger) extends Logger {
+    override def log(level: Level.Value, message: => String): Unit = (level, message.toLowerCase) match {
+      case (Level.Debug, _) =>
+        underlying.log(Level.Debug, message)
+      case (_, s) if s.contains("error") =>
+        underlying.log(Level.Error, message)
+      case (_, s) if s.contains("warning") =>
+        underlying.log(Level.Warn, message)
+      case _ =>
+        underlying.log(Level.Info, message)
+    }
+    override def trace(t: => Throwable): Unit = underlying.trace(t)
+    override def success(message: => String): Unit = underlying.success(message)
+  }
+
 }
