@@ -30,7 +30,7 @@ object FindSecBugs extends AutoPlugin {
   )
 
   private def findSecBugsTask() = Def.task {
-    def commandLineClasspath(classpathFiles: Seq[File]): String = PathFinder(classpathFiles).absString
+    def commandLineClasspath(classpathFiles: Seq[File]): String = PathFinder(classpathFiles.filter(_.exists)).absString
     lazy val log = Keys.streams.value.log
     lazy val output = crossTarget.value / "findsecbugs" / "report.html"
     lazy val findbugsClasspath = Classpaths managedJars (findsecbugsConfig, classpathTypes.value, update.value)
@@ -41,7 +41,7 @@ object FindSecBugs extends AutoPlugin {
 
     IO.createDirectory(output.getParentFile)
     IO.withTemporaryDirectory { tempdir =>
-      val includeFile: sbt.File = createIncludesFile(tempdir)
+      val includeFile = createIncludesFile(tempdir)
       val classDir = (classDirectory in Compile).value
 
       if (classDir.exists && !classDir.list().isEmpty) {
