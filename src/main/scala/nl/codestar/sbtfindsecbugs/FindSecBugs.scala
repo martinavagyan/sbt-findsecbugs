@@ -8,19 +8,21 @@ import Keys._
 object FindSecBugs extends AutoPlugin {
   private val findsecbugsPluginVersion = "1.4.6"
 
-  val findsecbugsConfig = sbt.config("findsecbugs")
-  val FindSecBugsTag = Tags.Tag("findSecBugs")
+  private val findsecbugsConfig = sbt.config("findsecbugs")
+  private val FindSecBugsTag = Tags.Tag("findSecBugs")
 
   override def trigger = AllRequirements
 
   object autoImport {
+    lazy val findSecBugsParallel = settingKey[Boolean]("Perform FindSecurityBugs check in parallel (or not)")
     lazy val findSecBugs = taskKey[Unit]("Perform FindSecurityBugs check")
   }
 
   import autoImport._
 
   override lazy val projectSettings = Seq(
-    concurrentRestrictions in Global += Tags.exclusive(FindSecBugsTag),
+    findSecBugsParallel := true,
+    concurrentRestrictions in Global ++= (if (findSecBugsParallel.value) Nil else Seq(Tags.exclusive(FindSecBugsTag))),
     ivyConfigurations += findsecbugsConfig,
     libraryDependencies ++= Seq(
       "com.google.code.findbugs" % "findbugs" % "3.0.1",
