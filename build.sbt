@@ -2,7 +2,7 @@ sbtPlugin := true
 
 name := "sbt-findsecbugs"
 organization := "nl.codestar"
-version := "0.5"
+version := "0.6-SNAPSHOT"
 description := "The Findbugs security plugin wrapped in a sbt plugin"
 
 scalaVersion := "2.10.6"
