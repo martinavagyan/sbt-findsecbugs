@@ -13,7 +13,7 @@ scalacOptions ++= Seq("-encoding", "UTF8", "-Xfatal-warnings",
 
 libraryDependencies += "com.google.code.findbugs" % "findbugs" % "3.0.1"
 libraryDependencies += "com.google.code.findbugs" % "jsr305" % "3.0.1"
-libraryDependencies += "com.h3xstream.findsecbugs" % "findsecbugs-plugin" % "1.6.0"
+libraryDependencies += "com.h3xstream.findsecbugs" % "findsecbugs-plugin" % "1.7.1"
 
 bintrayRepository := "sbt-plugins"
 bintrayOrganization := None

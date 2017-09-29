@@ -6,7 +6,7 @@ import sbt._
 import Keys._
 
 object FindSecBugs extends AutoPlugin {
-  private val findsecbugsPluginVersion = "1.6.0"
+  private val findsecbugsPluginVersion = "1.7.1"
 
   private val FindsecbugsConfig = sbt.config("findsecbugs")
   private val FindSecBugsTag = Tags.Tag("findSecBugs")
