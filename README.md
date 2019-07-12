@@ -17,7 +17,7 @@ sbt-findsecbugs has one setting:
 |Setting|Default|Meaning|
 |---|---|---|
 |`findSecBugsParallel`|`true`|In a multimodule build, whether to run the security check for all submodules in parallel. If you run into memory issues, it might help to set this to `false`.|
-
+|`findSecBugsExcludeFile`|`None`|Optionally provide a SpotBugs [exclusion file](https://spotbugs.readthedocs.io/en/latest/filter.html).|
 
 # Tests
 The plugin can be tested manually by running `sbt findSecBugs` in the test-project
