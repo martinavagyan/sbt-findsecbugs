@@ -72,9 +72,13 @@ object FindSecBugs extends AutoPlugin {
           excludeFile.toList.flatMap(f => List("-exclude", f.getAbsolutePath)) ++
           List(classDir.getAbsolutePath)
         val result = Fork.java(forkOptions, opts)
-        val exitCodesToPass = Seq(exitCodeOk) ++ forMissingClassFlag(findSecBugsFailOnMissingClass.value)
-        if (!exitCodesToPass.contains(result)) {
-          sys.error(s"Security issues found. Please review them in $output")
+        result match {
+          case `exitCodeOk` =>
+            //noop
+          case `exitCodeClassesMissing` if !findSecBugsFailOnMissingClass.value =>
+            //noop
+          case _ =>
+            sys.error(s"Security issues found. Please review them in $output")
         }
       }
       else {
@@ -82,9 +86,6 @@ object FindSecBugs extends AutoPlugin {
       }
     }
   }
-
-  private def forMissingClassFlag(fail: Boolean): Seq[Int] =
-    if (fail) Seq.empty else Seq(exitCodeClassesMissing)
 
   private def createIncludesFile(tempdir: sbt.File): sbt.File = {
     val includeFile = tempdir / "include.xml"
