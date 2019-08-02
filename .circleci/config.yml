@@ -9,11 +9,6 @@ jobs:
       - image: circleci/openjdk:8-jdk
     steps:
       - checkout
-      - run: wget --output-document=$HOME/bin/sbt-launch.jar https://repo1.maven.org/maven2/org/scala-sbt/sbt-launch/"$SBT_VERSION"/sbt-launch-"$SBT_VERSION".jar
-      - run: echo "java $SBT_OPTS -jar \`dirname \$0\`/sbt-launch.jar \"\$@\"" > $HOME/bin/sbt
-      - run: chmod u+x $HOME/bin/sbt
-      - run: which sbt
-      - run: sbt sbtVersion
       - restore_cache:
           key: dependency-cache
       - run: sbt clean test:compile scripted
