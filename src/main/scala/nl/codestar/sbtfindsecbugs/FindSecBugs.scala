@@ -17,16 +17,18 @@ object FindSecBugs extends AutoPlugin {
   override def trigger = AllRequirements
 
   object autoImport {
-    lazy val findSecBugsParallel = settingKey[Boolean]("Perform FindSecurityBugs check in parallel (or not)")
+    lazy val findSecBugsExcludeFile = settingKey[Option[File]]("The FindBugs exclude file for findsecbugs")
     lazy val findSecBugsFailOnMissingClass = settingKey[Boolean]("Consider 'missing class' flag as error")
+    lazy val findSecBugsParallel = settingKey[Boolean]("Perform FindSecurityBugs check in parallel (or not)")
     lazy val findSecBugs = taskKey[Unit]("Perform FindSecurityBugs check")
   }
 
   import autoImport._
 
   override lazy val projectSettings = Seq(
-    findSecBugsParallel := true,
+    findSecBugsExcludeFile := None,
     findSecBugsFailOnMissingClass := true,
+    findSecBugsParallel := true,
     concurrentRestrictions in Global ++= (if (findSecBugsParallel.value) Nil else Seq(Tags.exclusive(FindSecBugsTag))),
     ivyConfigurations += FindsecbugsConfig,
     libraryDependencies ++= Seq(
@@ -45,6 +47,7 @@ object FindSecBugs extends AutoPlugin {
     lazy val pluginList = s"${ivyHome.absolutePath}/cache/com.h3xstream.findsecbugs/findsecbugs-plugin/jars/findsecbugs-plugin-$findsecbugsPluginVersion.jar"
     lazy val classDir = (classDirectory in Compile).value
     lazy val jHome = javaHome.value
+    lazy val excludeFile = findSecBugsExcludeFile.value
 
     IO.createDirectory(output.getParentFile)
     IO.withTemporaryDirectory { tempdir =>
@@ -62,16 +65,17 @@ object FindSecBugs extends AutoPlugin {
           connectInput = true,
           envVars = Map.empty[String, String])
 
-        val result = Fork.java(
-          forkOptions,
-          List("-Xmx1024m", "-cp", classpath, "edu.umd.cs.findbugs.LaunchAppropriateUI", "-textui",
-            "-exitcode", "-html:plain.xsl", "-output", output.getAbsolutePath, "-nested:true",
-            "-auxclasspath", auxClasspath, "-low", "-effort:max", "-pluginList", pluginList,
-            "-include", includeFile.getAbsolutePath, classDir.getAbsolutePath))
-         val exitCodesToPass = Seq(exitCodeOk) ++ forMissingClassFlag(findSecBugsFailOnMissingClass.value)
-         if (!exitCodesToPass.contains(result)) {
+        val opts = List("-Xmx1024m", "-cp", classpath, "edu.umd.cs.findbugs.LaunchAppropriateUI", "-textui",
+          "-exitcode", "-html:plain.xsl", "-output", output.getAbsolutePath, "-nested:true",
+          "-auxclasspath", auxClasspath, "-low", "-effort:max", "-pluginList", pluginList) ++
+          List("-include", includeFile.getAbsolutePath) ++
+          excludeFile.toList.flatMap(f => List("-exclude", f.getAbsolutePath)) ++
+          List(classDir.getAbsolutePath)
+        val result = Fork.java(forkOptions, opts)
+        val exitCodesToPass = Seq(exitCodeOk) ++ forMissingClassFlag(findSecBugsFailOnMissingClass.value)
+        if (!exitCodesToPass.contains(result)) {
           sys.error(s"Security issues found. Please review them in $output")
-         }
+        }
       }
       else {
         log.warn(s"The directory $classDir does not exist or is empty, not running scan")
