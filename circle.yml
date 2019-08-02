@@ -1,6 +1,6 @@
 machine:
   environment:
-    SBT_VERSION: 1.0.1
+    SBT_VERSION: 1.2.8
     SBT_OPTS: "-Xms512M -Xmx1536M -Xss1M -XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=256M"
   java:
     version: openjdk8
