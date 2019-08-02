@@ -18,8 +18,8 @@ scriptedBufferLog := false
 
 libraryDependencies += "com.h3xstream.findsecbugs" % "findsecbugs-plugin" % "1.9.0"
 
-bintrayRepository := "sbt-plugins"
-bintrayOrganization := None
+bintrayRepository := "sbt-findsecbugs"
+bintrayOrganization := Some("code-star")
 
 licenses += ("MIT", url("https://opensource.org/licenses/MIT"))
 
