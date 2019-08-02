@@ -16,8 +16,8 @@ sbt-findsecbugs has one setting:
 
 |Setting|Default|Meaning|
 |---|---|---|
-|`findSecBugsParallel`|`true`|In a multimodule build, whether to run the security check for all submodules in parallel. If you run into memory issues, it might help to set this to `false`.|
-
+|`findSecBugsParallel`|`true`|In a multimodule build, whether to run the security check for all submodules in parallel. |If you run into memory issues, it might help to set this to `false`.|
+|`findSecBugsFailOnMissingClass`|`true`|Consider the 'missing class' flag as failure or not. Set this to 'false' in case you excpect and want to ignore missing class messages during the check.| 
 
 # Tests
 The plugin can be tested manually by running `sbt findSecBugs` in the test-project
