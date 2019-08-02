@@ -6,6 +6,9 @@ import sbt._
 import Keys._
 
 object FindSecBugs extends AutoPlugin {
+  private val exitCodeOk: Int = 0
+  private val exitCodeClassesMissing: Int = 2
+  
   private val findsecbugsPluginVersion = "1.7.1"
 
   private val FindsecbugsConfig = sbt.config("findsecbugs")
@@ -14,16 +17,18 @@ object FindSecBugs extends AutoPlugin {
   override def trigger = AllRequirements
 
   object autoImport {
-    lazy val findSecBugsParallel = settingKey[Boolean]("Perform FindSecurityBugs check in parallel (or not)")
     lazy val findSecBugsExcludeFile = settingKey[Option[File]]("The FindBugs exclude file for findsecbugs")
+    lazy val findSecBugsFailOnMissingClass = settingKey[Boolean]("Consider 'missing class' flag as error")
+    lazy val findSecBugsParallel = settingKey[Boolean]("Perform FindSecurityBugs check in parallel (or not)")
     lazy val findSecBugs = taskKey[Unit]("Perform FindSecurityBugs check")
   }
 
   import autoImport._
 
   override lazy val projectSettings = Seq(
-    findSecBugsParallel := true,
     findSecBugsExcludeFile := None,
+    findSecBugsFailOnMissingClass := true,
+    findSecBugsParallel := true,
     concurrentRestrictions in Global ++= (if (findSecBugsParallel.value) Nil else Seq(Tags.exclusive(FindSecBugsTag))),
     ivyConfigurations += FindsecbugsConfig,
     libraryDependencies ++= Seq(
@@ -60,20 +65,26 @@ object FindSecBugs extends AutoPlugin {
           connectInput = true,
           envVars = Map.empty[String, String])
 
-         val opts = List("-Xmx1024m", "-cp", classpath, "edu.umd.cs.findbugs.LaunchAppropriateUI", "-textui",
-           "-exitcode", "-html:plain.xsl", "-output", output.getAbsolutePath, "-nested:true",
-           "-auxclasspath", auxClasspath, "-low", "-effort:max", "-pluginList", pluginList) ++
-           List("-include", includeFile.getAbsolutePath) ++
-           excludeFile.toList.flatMap(f => List("-exclude", f.getAbsolutePath)) ++
-           List(classDir.getAbsolutePath)
+        val opts = List("-Xmx1024m", "-cp", classpath, "edu.umd.cs.findbugs.LaunchAppropriateUI", "-textui",
+          "-exitcode", "-html:plain.xsl", "-output", output.getAbsolutePath, "-nested:true",
+          "-auxclasspath", auxClasspath, "-low", "-effort:max", "-pluginList", pluginList) ++
+          List("-include", includeFile.getAbsolutePath) ++
+          excludeFile.toList.flatMap(f => List("-exclude", f.getAbsolutePath)) ++
+          List(classDir.getAbsolutePath)
         val result = Fork.java(forkOptions, opts)
-        if (result != 0) sys.error(s"Security issues found. Please review them in $output")
+        val exitCodesToPass = Seq(exitCodeOk) ++ forMissingClassFlag(findSecBugsFailOnMissingClass.value)
+        if (!exitCodesToPass.contains(result)) {
+          sys.error(s"Security issues found. Please review them in $output")
+        }
       }
       else {
         log.warn(s"The directory $classDir does not exist or is empty, not running scan")
       }
     }
   }
+
+  private def forMissingClassFlag(fail: Boolean): Seq[Int] =
+    if (fail) Seq.empty else Seq(exitCodeClassesMissing)
 
   private def createIncludesFile(tempdir: sbt.File): sbt.File = {
     val includeFile = tempdir / "include.xml"

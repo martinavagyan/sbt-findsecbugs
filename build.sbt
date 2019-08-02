@@ -1,11 +1,11 @@
-sbtPlugin := true
+enablePlugins(SbtPlugin)
 
 name := "sbt-findsecbugs"
 organization := "nl.codestar"
-version := "0.10-SNAPSHOT"
+version := "0.10"
 description := "The Findbugs security plugin wrapped in a sbt plugin"
 
-scalaVersion := "2.12.3"
+scalaVersion := "2.12.8"
 scalacOptions ++= Seq("-encoding", "UTF8", "-Xfatal-warnings",
   "-deprecation", "-feature", "-unchecked", "-Xlint",
   "-Ywarn-dead-code", "-Ywarn-adapted-args"
@@ -16,10 +16,10 @@ scriptedLaunchOpts := { scriptedLaunchOpts.value ++
 }
 scriptedBufferLog := false
 
-libraryDependencies += "com.h3xstream.findsecbugs" % "findsecbugs-plugin" % "1.7.1"
+libraryDependencies += "com.h3xstream.findsecbugs" % "findsecbugs-plugin" % "1.9.0"
 
-bintrayRepository := "sbt-plugins"
-bintrayOrganization := None
+bintrayRepository := "sbt-findsecbugs"
+bintrayOrganization := Some("code-star")
 
 licenses += ("MIT", url("https://opensource.org/licenses/MIT"))
 
