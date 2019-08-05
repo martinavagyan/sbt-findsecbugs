@@ -20,6 +20,14 @@ sbt-findsecbugs has one setting:
 |`findSecBugsFailOnMissingClass`|`true`|Consider the 'missing class' flag as failure or not. Set this to 'false' in case you excpect and want to ignore missing class messages during the check.| 
 |`findSecBugsParallel`|`true`|In a multimodule build, whether to run the security check for all submodules in parallel. If you run into memory issues, it might help to set this to `false`.|
 
-# Tests
+# For developers of sbt-findsecbugs
+
+## Tests
 The plugin can be tested manually by running `sbt findSecBugs` in the test-project
 The plugin has automated test which can be run by this command `sbt scripted`
+
+## Release
+To release a new version:
+* Get a [bintray](https://bintray.com) account and make sure you're a member of the [`code-star`](https://bintray.com/code-star) organization.
+* Run `sbt publish`
+
