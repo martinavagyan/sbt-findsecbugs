@@ -13,6 +13,7 @@ object FindSecBugs extends AutoPlugin {
   private val findsecbugsPluginVersion = "1.9.0"
 
   private val FindsecbugsConfig = sbt.config("findsecbugs")
+    .describedAs("Classpath configuration for SpotBugs")
   private val FindSecBugsTag = Tags.Tag("findSecBugs")
 
   override def trigger = AllRequirements
@@ -26,15 +27,17 @@ object FindSecBugs extends AutoPlugin {
 
   import autoImport._
 
-  override lazy val projectSettings = Seq(
+  override lazy val projectSettings = inConfig(FindsecbugsConfig)(Defaults.configSettings) ++ Seq(
     findSecBugsExcludeFile := None,
     findSecBugsFailOnMissingClass := true,
     findSecBugsParallel := true,
     concurrentRestrictions in Global ++= (if (findSecBugsParallel.value) Nil else Seq(Tags.exclusive(FindSecBugsTag))),
     ivyConfigurations += FindsecbugsConfig,
     libraryDependencies ++= Seq(
-      "com.github.spotbugs" % "spotbugs" % spotbugsVersion,
-      "com.h3xstream.findsecbugs" % "findsecbugs-plugin" % findsecbugsPluginVersion),
+      "com.github.spotbugs" % "spotbugs" % spotbugsVersion % FindsecbugsConfig,
+      "com.h3xstream.findsecbugs" % "findsecbugs-plugin" % findsecbugsPluginVersion % FindsecbugsConfig,
+      "org.slf4j" % "slf4j-simple" % "1.8.0-beta4" % FindsecbugsConfig
+    ),
     findSecBugs := (findSecBugsTask tag FindSecBugsTag).value
   )
 
@@ -42,7 +45,7 @@ object FindSecBugs extends AutoPlugin {
     def commandLineClasspath(classpathFiles: Seq[File]): String = PathFinder(classpathFiles.filter(_.exists)).absString
     lazy val log = Keys.streams.value.log
     lazy val output = crossTarget.value / "findsecbugs" / "report.html"
-    lazy val classpath = commandLineClasspath((dependencyClasspath in Compile).value.files)
+    lazy val classpath = commandLineClasspath((dependencyClasspath in FindsecbugsConfig).value.files)
     lazy val auxClasspath = commandLineClasspath((dependencyClasspath in Compile).value.files)
     lazy val ivyHome = ivyPaths(_.ivyHome).value.getOrElse(Path.userHome / ".ivy2")
     lazy val pluginList = s"${ivyHome.absolutePath}/cache/com.h3xstream.findsecbugs/findsecbugs-plugin/jars/findsecbugs-plugin-$findsecbugsPluginVersion.jar"
