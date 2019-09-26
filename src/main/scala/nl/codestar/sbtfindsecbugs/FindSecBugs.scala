@@ -8,8 +8,9 @@ import Keys._
 object FindSecBugs extends AutoPlugin {
   private val exitCodeOk: Int = 0
   private val exitCodeClassesMissing: Int = 2
-  
-  private val findsecbugsPluginVersion = "1.7.1"
+
+  private val spotbugsVersion = "3.1.12"
+  private val findsecbugsPluginVersion = "1.9.0"
 
   private val FindsecbugsConfig = sbt.config("findsecbugs")
   private val FindSecBugsTag = Tags.Tag("findSecBugs")
@@ -32,7 +33,7 @@ object FindSecBugs extends AutoPlugin {
     concurrentRestrictions in Global ++= (if (findSecBugsParallel.value) Nil else Seq(Tags.exclusive(FindSecBugsTag))),
     ivyConfigurations += FindsecbugsConfig,
     libraryDependencies ++= Seq(
-      "com.github.spotbugs" % "spotbugs" % "3.1.1",
+      "com.github.spotbugs" % "spotbugs" % spotbugsVersion,
       "com.h3xstream.findsecbugs" % "findsecbugs-plugin" % findsecbugsPluginVersion),
     findSecBugs := (findSecBugsTask tag FindSecBugsTag).value
   )
