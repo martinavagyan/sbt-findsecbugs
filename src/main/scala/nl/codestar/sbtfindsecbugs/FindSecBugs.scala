@@ -49,16 +49,19 @@ object FindSecBugs extends AutoPlugin {
     lazy val auxClasspath = commandLineClasspath((dependencyClasspath in Compile).value.files)
     lazy val ivyHome = ivyPaths(_.ivyHome).value.getOrElse(Path.userHome / ".ivy2")
     lazy val pluginList = s"${ivyHome.absolutePath}/cache/com.h3xstream.findsecbugs/findsecbugs-plugin/jars/findsecbugs-plugin-$findsecbugsPluginVersion.jar"
-    lazy val classDir = (classDirectory in Compile).value
+    lazy val classDirs = (products in Compile).value
     lazy val jHome = javaHome.value
     lazy val excludeFile = findSecBugsExcludeFile.value
 
     IO.createDirectory(output.getParentFile)
     IO.withTemporaryDirectory { tempdir =>
       val includeFile = createIncludesFile(tempdir)
-
-      if (classDir.exists && !classDir.list().isEmpty) {
-        log.info(s"Performing FindSecurityBugs check of '$classDir'...")
+      val filteredClassDirs = classDirs.filter { classDir =>
+        classDir.exists && classDir.list().nonEmpty
+      }
+      if (filteredClassDirs.nonEmpty) {
+        val filteredClassDirsStr = filteredClassDirs.map(cd => s"'$cd'").mkString(", ")
+        log.info(s"Performing FindSecurityBugs check of $filteredClassDirsStr...")
         val findBugsLogger = new FindBugsLogger(log)
         val forkOptions = ForkOptions(
           javaHome = jHome,
@@ -74,7 +77,7 @@ object FindSecBugs extends AutoPlugin {
           "-auxclasspath", auxClasspath, "-low", "-effort:max", "-pluginList", pluginList) ++
           List("-include", includeFile.getAbsolutePath) ++
           excludeFile.toList.flatMap(f => List("-exclude", f.getAbsolutePath)) ++
-          List(classDir.getAbsolutePath)
+          filteredClassDirs.map(_.getAbsolutePath)
         val result = Fork.java(forkOptions, opts)
         result match {
           case `exitCodeOk` =>
@@ -86,7 +89,8 @@ object FindSecBugs extends AutoPlugin {
         }
       }
       else {
-        log.warn(s"The directory $classDir does not exist or is empty, not running scan")
+        val classDirsStr = classDirs.map(cd => s"'$cd'").mkString(", ")
+        log.warn(s"Every class directory ($classDirsStr) does not exist or is empty, not running scan")
       }
     }
   }
