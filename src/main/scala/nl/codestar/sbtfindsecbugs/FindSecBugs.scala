@@ -38,13 +38,14 @@ object FindSecBugs extends AutoPlugin {
       "com.h3xstream.findsecbugs" % "findsecbugs-plugin" % findsecbugsPluginVersion % FindsecbugsConfig,
       "org.slf4j" % "slf4j-simple" % "1.8.0-beta4" % FindsecbugsConfig
     ),
-    findSecBugs := (findSecBugsTask tag FindSecBugsTag).value
+    findSecBugs := (findSecBugsTask tag FindSecBugsTag).value,
+    artifactPath in findSecBugs := crossTarget.value / "findsecbugs" / "report.html"
   )
 
   private def findSecBugsTask() = Def.task {
     def commandLineClasspath(classpathFiles: Seq[File]): String = PathFinder(classpathFiles.filter(_.exists)).absString
     lazy val log = Keys.streams.value.log
-    lazy val output = crossTarget.value / "findsecbugs" / "report.html"
+    lazy val output = (artifactPath in findSecBugs).value
     lazy val classpath = commandLineClasspath((dependencyClasspath in FindsecbugsConfig).value.files)
     lazy val auxClasspath = commandLineClasspath((dependencyClasspath in Compile).value.files)
     lazy val ivyHome = ivyPaths(_.ivyHome).value.getOrElse(Path.userHome / ".ivy2")
