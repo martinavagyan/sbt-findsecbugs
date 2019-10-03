@@ -89,7 +89,7 @@ object FindSecBugs extends AutoPlugin {
       }
       else {
         val classDirsStr = classDirs.map(cd => s"'$cd'").mkString(", ")
-        log.warn(s"Every class directory ($classDirsStr) does not exist or is empty, not running scan")
+        log.warn(s"Class directory list ($classDirsStr) contains no existing directories, not running scan")
       }
     }
   }
