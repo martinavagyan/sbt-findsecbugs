@@ -14,11 +14,12 @@ You can now run `sbt findSecBugs`.
 
 sbt-findsecbugs has one setting:
 
-|Setting|Default|Meaning|
-|---|---|---|
-|`findSecBugsExcludeFile`|`None`|Optionally provide a SpotBugs [exclusion file](https://spotbugs.readthedocs.io/en/latest/filter.html).|
-|`findSecBugsFailOnMissingClass`|`true`|Consider the 'missing class' flag as failure or not. Set this to 'false' in case you excpect and want to ignore missing class messages during the check.| 
-|`findSecBugsParallel`|`true`|In a multimodule build, whether to run the security check for all submodules in parallel. If you run into memory issues, it might help to set this to `false`.|
+| Setting                         | Default                                             | Meaning                                                                                                                                                        |
+|---------------------------------|-----------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `findSecBugsExcludeFile`        | `None`                                              | Optionally provide a SpotBugs [exclusion file](https://spotbugs.readthedocs.io/en/latest/filter.html).                                                         |
+| `findSecBugsFailOnMissingClass` | `true`                                              | Consider the 'missing class' flag as failure or not. Set this to 'false' in case you excpect and want to ignore missing class messages during the check.       |
+| `findSecBugsParallel`           | `true`                                              | In a multimodule build, whether to run the security check for all submodules in parallel. If you run into memory issues, it might help to set this to `false`. |
+| `findSecBugs / artifactPath`    | `crossTarget.value / "findsecbugs" / "report.html"` | Output path for the resulting report.                                                                                                                          |
 
 # For developers of sbt-findsecbugs
 
