@@ -56,9 +56,7 @@ object FindSecBugs extends AutoPlugin {
     IO.createDirectory(output.getParentFile)
     IO.withTemporaryDirectory { tempdir =>
       val includeFile = createIncludesFile(tempdir)
-      val filteredClassDirs = classDirs.filter { classDir =>
-        classDir.exists && classDir.list().nonEmpty
-      }
+      val filteredClassDirs = classDirs.filter(_.exists)
       if (filteredClassDirs.nonEmpty) {
         val filteredClassDirsStr = filteredClassDirs.map(cd => s"'$cd'").mkString(", ")
         log.info(s"Performing FindSecurityBugs check of $filteredClassDirsStr...")
@@ -74,7 +72,8 @@ object FindSecBugs extends AutoPlugin {
 
         val opts = List("-Xmx1024m", "-cp", classpath, "edu.umd.cs.findbugs.LaunchAppropriateUI", "-textui",
           "-exitcode", "-html:plain.xsl", "-output", output.getAbsolutePath, "-nested:true",
-          "-auxclasspath", auxClasspath, "-low", "-effort:max", "-pluginList", pluginList) ++
+          "-auxclasspath", auxClasspath, "-low", "-effort:max", "-pluginList", pluginList,
+          "-noClassOk") ++
           List("-include", includeFile.getAbsolutePath) ++
           excludeFile.toList.flatMap(f => List("-exclude", f.getAbsolutePath)) ++
           filteredClassDirs.map(_.getAbsolutePath)
@@ -90,7 +89,7 @@ object FindSecBugs extends AutoPlugin {
       }
       else {
         val classDirsStr = classDirs.map(cd => s"'$cd'").mkString(", ")
-        log.warn(s"Every class directory ($classDirsStr) does not exist or is empty, not running scan")
+        log.warn(s"Class directory list ($classDirsStr) contains no existing directories, not running scan")
       }
     }
   }

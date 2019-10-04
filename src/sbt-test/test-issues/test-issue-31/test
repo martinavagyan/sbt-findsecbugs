@@ -1,0 +1,2 @@
+> findSecBugs
+$ exists target/scala-2.12/findsecbugs/report.html
