@@ -1,0 +1,3 @@
+# We expect this to fail since we have a bug here
+-> findSecBugs
+$ exists target/scala-2.12/findsecbugs/report.html

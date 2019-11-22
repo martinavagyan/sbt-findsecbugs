@@ -16,8 +16,6 @@ scriptedLaunchOpts := { scriptedLaunchOpts.value ++
 }
 scriptedBufferLog := false
 
-libraryDependencies += "com.h3xstream.findsecbugs" % "findsecbugs-plugin" % "1.9.0"
-
 bintrayRepository := "sbt-findsecbugs"
 bintrayOrganization := Some("code-star")
 

@@ -11,6 +11,7 @@ object FindSecBugs extends AutoPlugin {
 
   private val spotbugsVersion = "3.1.12"
   private val findsecbugsPluginVersion = "1.9.0"
+  private val pluginId = "com.h3xstream.findsecbugs" % "findsecbugs-plugin" % findsecbugsPluginVersion
 
   private val FindsecbugsConfig = sbt.config("findsecbugs")
     .describedAs("Classpath configuration for SpotBugs")
@@ -35,7 +36,7 @@ object FindSecBugs extends AutoPlugin {
     ivyConfigurations += FindsecbugsConfig,
     libraryDependencies ++= Seq(
       "com.github.spotbugs" % "spotbugs" % spotbugsVersion % FindsecbugsConfig,
-      "com.h3xstream.findsecbugs" % "findsecbugs-plugin" % findsecbugsPluginVersion % FindsecbugsConfig,
+      pluginId % FindsecbugsConfig,
       "org.slf4j" % "slf4j-simple" % "1.8.0-beta4" % FindsecbugsConfig
     ),
     findSecBugs := (findSecBugsTask tag FindSecBugsTag).value,
@@ -48,11 +49,14 @@ object FindSecBugs extends AutoPlugin {
     lazy val output = (artifactPath in findSecBugs).value
     lazy val classpath = commandLineClasspath((dependencyClasspath in FindsecbugsConfig).value.files)
     lazy val auxClasspath = commandLineClasspath((dependencyClasspath in Compile).value.files)
-    lazy val ivyHome = ivyPaths(_.ivyHome).value.getOrElse(Path.userHome / ".ivy2")
-    lazy val pluginList = s"${ivyHome.absolutePath}/cache/com.h3xstream.findsecbugs/findsecbugs-plugin/jars/findsecbugs-plugin-$findsecbugsPluginVersion.jar"
     lazy val classDirs = (products in Compile).value
     lazy val jHome = javaHome.value
     lazy val excludeFile = findSecBugsExcludeFile.value
+
+    lazy val updateReport = update.value
+    lazy val pluginList: String = findPluginJar(updateReport).getOrElse(
+      sys.error(s"Failed to find resolved JAR for $pluginId")
+    ).getAbsolutePath
 
     IO.createDirectory(output.getParentFile)
     IO.withTemporaryDirectory { tempdir =>
@@ -108,6 +112,17 @@ object FindSecBugs extends AutoPlugin {
     IO.write(includeFile, includeXml)
     includeFile
   }
+
+  private def findPluginJar(updateReport: UpdateReport): Option[File] =
+    updateReport.configuration(FindsecbugsConfig)
+      .flatMap(_.modules.find { resolvedModule =>
+        // We don't compare the revisions, etc. - resolution can change those.
+        resolvedModule.module.organization == pluginId.organization &&
+        resolvedModule.module.name == pluginId.name
+      })
+      .flatMap(_.artifacts.collectFirst {
+        case (artifact, file) if artifact.`type` == Artifact.DefaultType => file
+      })
 
   /**
     * FindBugs logs everyting to stderr, even when everything was succesful.
