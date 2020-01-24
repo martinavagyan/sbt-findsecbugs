@@ -2,7 +2,7 @@ enablePlugins(SbtPlugin)
 
 name := "sbt-findsecbugs"
 organization := "nl.codestar"
-version := "0.15"
+version := "0.16-SNAPSHOT"
 description := "The Findbugs security plugin wrapped in a sbt plugin"
 
 scalaVersion := "2.12.8"
