@@ -28,20 +28,26 @@ object FindSecBugs extends AutoPlugin {
 
   import autoImport._
 
-  override lazy val projectSettings = inConfig(FindsecbugsConfig)(Defaults.configSettings) ++ Seq(
-    findSecBugsExcludeFile := None,
-    findSecBugsFailOnMissingClass := true,
-    findSecBugsParallel := true,
-    concurrentRestrictions in Global ++= (if (findSecBugsParallel.value) Nil else Seq(Tags.exclusive(FindSecBugsTag))),
-    ivyConfigurations += FindsecbugsConfig,
-    libraryDependencies ++= Seq(
-      "com.github.spotbugs" % "spotbugs" % spotbugsVersion % FindsecbugsConfig,
-      pluginId % FindsecbugsConfig,
-      "org.slf4j" % "slf4j-simple" % "1.8.0-beta4" % FindsecbugsConfig
-    ),
-    findSecBugs := (findSecBugsTask tag FindSecBugsTag).value,
-    artifactPath in findSecBugs := crossTarget.value / "findsecbugs" / "report.html"
-  )
+  override lazy val projectSettings =
+    inConfig(FindsecbugsConfig)(Defaults.configSettings) ++
+      inTask(findSecBugs)(Seq(
+        forkOptions := Defaults.forkOptionsTask.value,
+        connectInput := true,
+        javaOptions += "-Xmx1024m"
+      )) ++ Seq(
+        findSecBugsExcludeFile := None,
+        findSecBugsFailOnMissingClass := true,
+        findSecBugsParallel := true,
+        concurrentRestrictions in Global ++= (if (findSecBugsParallel.value) Nil else Seq(Tags.exclusive(FindSecBugsTag))),
+        ivyConfigurations += FindsecbugsConfig,
+        libraryDependencies ++= Seq(
+          "com.github.spotbugs" % "spotbugs" % spotbugsVersion % FindsecbugsConfig,
+          pluginId % FindsecbugsConfig,
+          "org.slf4j" % "slf4j-simple" % "1.8.0-beta4" % FindsecbugsConfig
+        ),
+        findSecBugs := (findSecBugsTask tag FindSecBugsTag).value,
+        artifactPath in findSecBugs := crossTarget.value / "findsecbugs" / "report.html"
+      )
 
   private def findSecBugsTask() = Def.task {
     def commandLineClasspath(classpathFiles: Seq[File]): String = PathFinder(classpathFiles.filter(_.exists)).absString
@@ -50,13 +56,15 @@ object FindSecBugs extends AutoPlugin {
     lazy val classpath = commandLineClasspath((dependencyClasspath in FindsecbugsConfig).value.files)
     lazy val auxClasspath = commandLineClasspath((dependencyClasspath in Compile).value.files)
     lazy val classDirs = (products in Compile).value
-    lazy val jHome = javaHome.value
     lazy val excludeFile = findSecBugsExcludeFile.value
 
     lazy val updateReport = update.value
     lazy val pluginList: String = findPluginJar(updateReport).getOrElse(
       sys.error(s"Failed to find resolved JAR for $pluginId")
     ).getAbsolutePath
+    lazy val forkOptions0 = (findSecBugs / forkOptions).value
+      // can't do this through settings - `streams` is a task.
+      .withOutputStrategy(LoggedOutput(new FindBugsLogger(log)))
 
     IO.createDirectory(output.getParentFile)
     IO.withTemporaryDirectory { tempdir =>
@@ -65,24 +73,14 @@ object FindSecBugs extends AutoPlugin {
       if (filteredClassDirs.nonEmpty) {
         val filteredClassDirsStr = filteredClassDirs.map(cd => s"'$cd'").mkString(", ")
         log.info(s"Performing FindSecurityBugs check of $filteredClassDirsStr...")
-        val findBugsLogger = new FindBugsLogger(log)
-        val forkOptions = ForkOptions(
-          javaHome = jHome,
-          outputStrategy = Option(LoggedOutput(findBugsLogger)),
-          bootJars = Vector.empty[java.io.File],
-          workingDirectory = None,
-          runJVMOptions = Vector.empty[String],
-          connectInput = true,
-          envVars = Map.empty[String, String])
-
-        val opts = List("-Xmx1024m", "-cp", classpath, "edu.umd.cs.findbugs.LaunchAppropriateUI", "-textui",
+        val opts = List("-cp", classpath, "edu.umd.cs.findbugs.LaunchAppropriateUI", "-textui",
           "-exitcode", "-html:plain.xsl", "-output", output.getAbsolutePath, "-nested:true",
           "-auxclasspath", auxClasspath, "-low", "-effort:max", "-pluginList", pluginList,
           "-noClassOk") ++
           List("-include", includeFile.getAbsolutePath) ++
           excludeFile.toList.flatMap(f => List("-exclude", f.getAbsolutePath)) ++
           filteredClassDirs.map(_.getAbsolutePath)
-        val result = Fork.java(forkOptions, opts)
+        val result = Fork.java(forkOptions0, opts)
         result match {
           case `exitCodeOk` =>
             //noop
