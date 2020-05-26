@@ -75,7 +75,7 @@ object FindSecBugs extends AutoPlugin {
         log.info(s"Performing FindSecurityBugs check of $filteredClassDirsStr...")
         val opts = List("-cp", classpath, "edu.umd.cs.findbugs.LaunchAppropriateUI", "-textui",
           "-exitcode", "-html:plain.xsl", "-output", output.getAbsolutePath, "-nested:true",
-          "-auxclasspath", auxClasspath, "-low", "-effort:max", "-pluginList", pluginList,
+          "-auxclasspath", auxClasspath, "-high", "-effort:max", "-pluginList", pluginList,
           "-noClassOk") ++
           List("-include", includeFile.getAbsolutePath) ++
           excludeFile.toList.flatMap(f => List("-exclude", f.getAbsolutePath)) ++
