@@ -39,7 +39,7 @@ object FindSecBugs extends AutoPlugin {
         javaOptions += "-Xmx1024m"
       )) ++ Seq(
         findSecBugsExcludeFile := None,
-        findSecBugsFailOnMissingClass := false,
+        findSecBugsFailOnMissingClass := true,
         findSecBugsParallel := true,
         findSecBugsPriorityThreshold := Normal,
         concurrentRestrictions in Global ++= (if (findSecBugsParallel.value) Nil else Seq(Tags.exclusive(FindSecBugsTag))),
