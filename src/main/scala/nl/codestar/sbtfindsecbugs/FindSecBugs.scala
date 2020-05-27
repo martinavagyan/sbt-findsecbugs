@@ -36,7 +36,7 @@ object FindSecBugs extends AutoPlugin {
         javaOptions += "-Xmx1024m"
       )) ++ Seq(
         findSecBugsExcludeFile := None,
-        findSecBugsFailOnMissingClass := true,
+        findSecBugsFailOnMissingClass := false,
         findSecBugsParallel := true,
         concurrentRestrictions in Global ++= (if (findSecBugsParallel.value) Nil else Seq(Tags.exclusive(FindSecBugsTag))),
         ivyConfigurations += FindsecbugsConfig,
